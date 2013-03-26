@@ -1,0 +1,2 @@
+serviceClass: com.dbas.transfer.client.GreetingService
+path: CE9894341A20F4A6D522BC729F450607.gwt.rpc
