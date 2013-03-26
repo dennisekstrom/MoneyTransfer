@@ -12,19 +12,35 @@ import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 @SuppressWarnings("serial")
 public class ServerServiceImpl extends RemoteServiceServlet implements
 		ServerService {
-	
-	public boolean sendMoney(double amount, Customer sender, Customer receiver, int sendKioskId, int recKioskId) {
-		return DBConnection.sendMoney(amount, sender, receiver, sendKioskId, recKioskId);
+
+	@Override
+	public boolean registerCustomer(String firstName, String lastName,
+			String ppn) {
+		return DBConnection.addCustomer(new Customer(firstName, lastName, ppn));
 	}
-	
-	public Double receiveMoney(long receiverId, int recKioskId) {
-		return DBConnection.receiveMoney(receiverId, recKioskId);
+
+	@Override
+	public boolean sendMoney(double amount, String senderPPN,
+			String receiverPPN, String sendKioskAddress, String recKioskAddress) {
+		return DBConnection.sendMoney(amount, senderPPN, receiverPPN,
+				sendKioskAddress, recKioskAddress);
 	}
-	
-	public String[] getKioskAdresses() {
+
+	@Override
+	public String receiveMoney(String receiverId, String recKioskAddress) {
+		return DBConnection.receiveMoney(receiverId, recKioskAddress);
+	}
+
+	@Override
+	public Integer getKioskId(String address) {
+		return DBConnection.getKioskId(address);
+	}
+
+	@Override
+	public String[] getKioskAddresses() {
 		ArrayList<String> adresses = new ArrayList<String>();
 		for (Kiosk kiosk : DBConnection.getKiosks())
-			adresses.add(kiosk.getAddress());
+			adresses.add(kiosk.getAddress() + " (" + kiosk.getCurrency().getCode() + ")");
 		return adresses.toArray(new String[0]);
 	}
 }

@@ -6,13 +6,17 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
  * The async counterpart of <code>GreetingService</code>.
  */
 public interface ServerServiceAsync {
-	void sendMoney(double amount, Customer sender, Customer receiver,
-			int sendKioskId, int recKioskId, AsyncCallback<Boolean> callback)
-			throws IllegalArgumentException;
+	void registerCustomer(String firstName, String lastName, String ppn,
+			AsyncCallback<Boolean> callback);
 
-	void receiveMoney(long receiverId, int recKioskId,
-			AsyncCallback<Double> callback) throws IllegalArgumentException;
+	void sendMoney(double amount, String senderPPN, String receiverPPN,
+			String sendKioskAddress, String recKioskAddress,
+			AsyncCallback<Boolean> callback);
 
-	void getKioskAdresses(AsyncCallback<String[]> callback)
-			throws IllegalArgumentException;
+	void receiveMoney(String receiverId, String recKioskAddress,
+			AsyncCallback<String> callback);
+
+	void getKioskId(String address, AsyncCallback<Integer> callback);
+
+	void getKioskAddresses(AsyncCallback<String[]> callback);
 }

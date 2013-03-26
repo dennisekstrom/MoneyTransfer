@@ -8,10 +8,14 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
  */
 @RemoteServiceRelativePath("greet")
 public interface ServerService extends RemoteService {
-	boolean sendMoney(double amount, Customer sender, Customer receiver,
-			int sendKioskId, int recKioskId) throws IllegalArgumentException;
-
-	Double receiveMoney(long receiverId, int recKioskId);
+	boolean registerCustomer(String firstName, String lastName, String ppn);
 	
-	String[] getKioskAdresses() throws IllegalArgumentException;
+	boolean sendMoney(double amount, String senderPPN, String receiverPPN,
+			String sendKioskAddress, String recKioskAddress);
+
+	String receiveMoney(String receiverId, String recKioskAddress);
+	
+	Integer getKioskId(String address);
+	
+	String[] getKioskAddresses();
 }

@@ -15,13 +15,10 @@ public class Transfer {
 	private Customer receiver;
 	private Kiosk sendKiosk;
 	private Kiosk recKiosk;
-	private Currency sendCurrency;
-	private Currency recCurrency;
 
 	public Transfer(int id, Date time, double sendAmount,
 			TransferStatus status, Customer sender, Customer receiver,
-			Kiosk sendKiosk, Kiosk recKiosk, Currency sendCurrency,
-			Currency recCurrency) {
+			Kiosk sendKiosk, Kiosk recKiosk) {
 		this.id = id;
 		this.time = time;
 		this.sendAmount = sendAmount;
@@ -30,8 +27,6 @@ public class Transfer {
 		this.receiver = receiver;
 		this.sendKiosk = sendKiosk;
 		this.recKiosk = recKiosk;
-		this.sendCurrency = sendCurrency;
-		this.recCurrency = recCurrency;
 	}
 
 	public int getId() {
@@ -100,21 +95,4 @@ public class Transfer {
 	public void setRecKiosk(Kiosk recKiosk) {
 		this.recKiosk = recKiosk;
 	}
-
-	public Currency getSendCurrency() {
-		return sendCurrency;
-	}
-
-	public void setSendCurrency(Currency sendCurrency) {
-		this.sendCurrency = sendCurrency;
-	}
-
-	public Currency getRecCurrency() {
-		return recCurrency;
-	}
-
-	public void setRecCurrency(Currency recCurrency) {
-		this.recCurrency = recCurrency;
-	}
-
 }

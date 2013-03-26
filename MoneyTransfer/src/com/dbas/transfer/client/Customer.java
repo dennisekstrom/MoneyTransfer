@@ -6,13 +6,13 @@ public class Customer implements IsSerializable {
 	
 	private String firstName;
 	private String lastName;
-	private long passportNum;
+	private String passportNum;
 
 	public Customer() {
-		this(null, null, 0);
+		this(null, null, null);
 	}
 	
-	public Customer(String firstName, String lastName, long passportNum) {
+	public Customer(String firstName, String lastName, String passportNum) {
 		this.firstName = firstName;
 		this.lastName = lastName;
 		this.passportNum = passportNum;
@@ -34,11 +34,11 @@ public class Customer implements IsSerializable {
 		this.lastName = lastName;
 	}
 
-	public long getPassportNum() {
+	public String getPassportNum() {
 		return passportNum;
 	}
 
-	public void setPassportNum(long passportNum) {
+	public void setPassportNum(String passportNum) {
 		this.passportNum = passportNum;
 	}
 

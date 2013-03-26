@@ -1,4 +1,5 @@
 package com.dbas.transfer.server;
+
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.Date;
@@ -19,15 +20,12 @@ public class DBConnection {
 	// public static void main(String[] args) {
 	// Currency eur = new Currency("EUR");
 	// Currency yen = new Currency("JPY");
-	// Customer andreas = new Customer("Andreas", "Finn", 3);
-	// Customer hasse = new Customer("Hasse", "Aro", 4);
+	// Customer andreas = new Customer("Andreas", "Finn", "3");
+	// Customer hasse = new Customer("Hasse", "Aro", "4");
 	// ExchangeRate eur_yen = new ExchangeRate(eur, yen, 124);
 	// ExchangeRate yen_eur = new ExchangeRate(yen, eur, 1.0 / 124);
 	// Kiosk madrid = new Kiosk(3, "Madrid", eur, 200, 0);
 	// Kiosk tokio = new Kiosk(4, "Tokio", yen, 10000, 0);
-	// Transfer transfer = new Transfer(10, new Date(0), 100.0,
-	// TransferStatus.INCOMPLETE, andreas, hasse, madrid, tokio, eur,
-	// yen);
 	// }
 
 	static {
@@ -74,7 +72,7 @@ public class DBConnection {
 		try {
 			pstm = conn.prepareStatement(query);
 
-			pstm.setLong(1, customer.getPassportNum());
+			pstm.setString(1, customer.getPassportNum());
 			pstm.setString(2, customer.getFirstName());
 			pstm.setString(3, customer.getLastName());
 
@@ -152,12 +150,12 @@ public class DBConnection {
 			pstm.setString(2, getDateTimeString(transfer.getTime()));
 			pstm.setDouble(3, transfer.getSendAmount());
 			pstm.setString(4, transfer.getStatus().toString());
-			pstm.setLong(5, transfer.getSender().getPassportNum());
-			pstm.setLong(6, transfer.getReceiver().getPassportNum());
+			pstm.setString(5, transfer.getSender().getPassportNum());
+			pstm.setString(6, transfer.getReceiver().getPassportNum());
 			pstm.setInt(7, transfer.getSendKiosk().getId());
 			pstm.setInt(8, transfer.getRecKiosk().getId());
-			pstm.setString(9, transfer.getSendCurrency().getCode());
-			pstm.setString(10, transfer.getRecCurrency().getCode());
+			pstm.setString(9, transfer.getRecKiosk().getCurrency().getCode());
+			pstm.setString(10, transfer.getRecKiosk().getCurrency().getCode());
 
 			int ret = pstm.executeUpdate();
 			success = ret != 0;
@@ -169,9 +167,18 @@ public class DBConnection {
 		return success;
 	}
 
+	public static boolean sendMoney(double amount, String senderPPN,
+			String receiverPPN, String sendKioskAddress, String recKioskAddress) {
+
+		int sendKioskId = getKioskId(sendKioskAddress);
+		int recKioskId = getKioskId(recKioskAddress);
+		return sendMoney(amount, senderPPN, receiverPPN, sendKioskId,
+				recKioskId);
+	}
+
 	// TESTED
-	public static boolean sendMoney(double amount, Customer sender,
-			Customer receiver, int sendKioskId, int recKioskId) {
+	public static boolean sendMoney(double amount, String senderPPN,
+			String receiverPPN, int sendKioskId, int recKioskId) {
 
 		String call = "{call sendMoney(?, ?, ?, ?, ?, ?)}";
 
@@ -181,8 +188,8 @@ public class DBConnection {
 			cstm = conn.prepareCall(call);
 
 			cstm.setDouble(1, amount);
-			cstm.setLong(2, sender.getPassportNum());
-			cstm.setLong(3, receiver.getPassportNum());
+			cstm.setString(2, senderPPN);
+			cstm.setString(3, receiverPPN);
 			cstm.setInt(4, sendKioskId);
 			cstm.setInt(5, recKioskId);
 
@@ -199,11 +206,16 @@ public class DBConnection {
 		return success;
 	}
 
+	public static String receiveMoney(String receiverPassPortNum, String recKioskAddress) {
+		int recKioskId = getKioskId(recKioskAddress);
+		return receiveMoney(receiverPassPortNum, recKioskId);
+	}
+
 	// TESTED
 	/**
 	 * Returns null if unable to receive.
 	 */
-	public static Double receiveMoney(long receiverPassPortNum, int recKioskId) {
+	public static String receiveMoney(String receiverPassPortNum, int recKioskId) {
 
 		String query = "SELECT receiveMoney(?, ?)";
 
@@ -213,7 +225,7 @@ public class DBConnection {
 		try {
 			pstm = conn.prepareStatement(query);
 
-			pstm.setLong(1, receiverPassPortNum);
+			pstm.setString(1, receiverPassPortNum);
 			pstm.setInt(2, recKioskId);
 
 			rs = pstm.executeQuery();
@@ -222,15 +234,63 @@ public class DBConnection {
 			amount = rs.getDouble(1);
 			if (rs.wasNull())
 				amount = null;
+			
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
 			close(pstm);
 			close(rs);
 		}
-		return amount;
+		
+		query = "SELECT currency FROM Kiosks WHERE id = \"" + recKioskId + "\"";
+
+		Statement stmt = null;
+		rs = null;
+		String currency = null;
+		try {
+			stmt = conn.createStatement();
+
+			rs = stmt.executeQuery(query);
+
+			rs.next();
+			currency = rs.getString("currency");
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			close(stmt);
+			close(rs);
+		}
+		
+		if(amount == null || currency == null)
+			return null;
+		
+		return String.format("%.2f %s", amount, currency);
 	}
-	
+
+	public static Integer getKioskId(String address) {
+		String query = "SELECT id FROM Kiosks WHERE address = \"" + address
+				+ "\"";
+
+		Statement stmt = null;
+		ResultSet rs = null;
+		try {
+			stmt = conn.createStatement();
+
+			rs = stmt.executeQuery(query);
+
+			rs.next();
+			return rs.getInt("id");
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			close(stmt);
+			close(rs);
+		}
+		return null;
+	}
+
 	public static Kiosk[] getKiosks() {
 		String query = "SELECT * FROM Kiosks";
 
@@ -242,13 +302,11 @@ public class DBConnection {
 
 			rs = stmt.executeQuery(query);
 
-			while(rs.next())
-				kiosks.add(new Kiosk(
-						rs.getInt("id"),
-						rs.getString("adress"),
-						new Currency(rs.getString("currency")),
-						rs.getDouble("operatingBalance"),
-						rs.getDouble("revenue")));
+			while (rs.next())
+				kiosks.add(new Kiosk(rs.getInt("id"), rs.getString("address"),
+						new Currency(rs.getString("currency")), rs
+								.getDouble("operatingBalance"), rs
+								.getDouble("revenue")));
 
 		} catch (SQLException e) {
 			e.printStackTrace();
